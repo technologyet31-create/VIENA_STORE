@@ -6,9 +6,14 @@ body {
     transition: margin-right 0.4s ease;
 }
 
+:root {
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 80px;
+}
+
 .sidebar {
     height: 100vh;
-    width: 260px;
+    width: var(--sidebar-width);
     position: fixed;
     top: 0;
     right: 0;
@@ -70,13 +75,13 @@ body {
 
 .content {
     padding: 30px;
-    margin-right: 260px;
+    margin-right: var(--sidebar-width);
     transition: margin-right 0.4s ease;
 }
 
 /* Collapsed state */
 body.sidebar-collapsed .sidebar {
-    width: 80px;
+    width: var(--sidebar-collapsed-width);
 }
 
 body.sidebar-collapsed .sidebar-header h3 {
@@ -97,16 +102,40 @@ body.sidebar-collapsed .nav-link .icon {
 }
 
 body.sidebar-collapsed .content {
-    margin-right: 80px;
+    margin-right: var(--sidebar-collapsed-width);
+}
+
+@media (max-width: 992px) {
+    /* On small screens keep sidebar overlayed and collapsed by default */
+    :root { --sidebar-width: 260px; }
+    .sidebar { right: 0; transform: translateX(0); }
 }
 
 .page {
     display: none;
-    animation: fadeIn 0.5s;
+    position: relative;
+    will-change: transform, opacity;
 }
 
 .page.active {
     display: block;
+}
+
+/* Page transition animations */
+.page-enter {
+    animation: pageIn 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.page-exit {
+    animation: pageOut 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes pageIn {
+    from { opacity: 0; transform: translateX(18px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pageOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(-18px); }
 }
 
 @keyframes fadeIn {

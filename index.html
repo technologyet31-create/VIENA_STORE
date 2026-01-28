@@ -4,191 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIENNA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="mainColors.css">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="assets/css/shared.css">
 </head>
 <body>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3>VIENNA</h3>
-            <button id="toggle-btn">☰</button>
+            <div class="brand">VIENNA</div>
+            <button id="toggle-btn" aria-label="Toggle sidebar">☰</button>
+            <button class="sidebar-close" type="button" aria-label="إغلاق القائمة">&times;</button>
         </div>
-        <ul class="nav-list">
-            <li><a href="#" class="nav-link active" data-page="dashboard"><span class="icon">📈</span><span class="link-text">لوحة التحكم</span></a></li>
-            <li><a href="#" class="nav-link" data-page="procurement"><span class="icon">🛒</span><span class="link-text">اداره المشتريات</span></a></li>
-            <li><a href="#" class="nav-link" data-page="add-items"><span class="icon">➕</span><span class="link-text">اضافه الاصناف</span></a></li>
-            <li><a href="#" class="nav-link" data-page="inventory"><span class="icon">📦</span><span class="link-text">المخزن</span></a></li>
+        <ul class="sidebar-nav">
+            <li><a href="index.html" class="sidebar-link active"><span class="icon"><i class="bi bi-house-door" aria-hidden="true"></i></span><span class="label">الرئيسية</span></a></li>
+            <li><a href="pages/dashboard/dashboard.html" class="sidebar-link"><span class="icon"><i class="bi bi-bar-chart-line" aria-hidden="true"></i></span><span class="label">لوحة التحكم</span></a></li>
+            <li><a href="pages/procurement/procurement.html" class="sidebar-link"><span class="icon"><i class="bi bi-cart3" aria-hidden="true"></i></span><span class="label">اداره المشتريات</span></a></li>
+            <li><a href="pages/items/items.html" class="sidebar-link"><span class="icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></span><span class="label">اضافه الاصناف</span></a></li>
+            <li><a href="pages/inventory/inventory.html" class="sidebar-link"><span class="icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span><span class="label">المخزن</span></a></li>
         </ul>
     </div>
     <main id="main-content" class="content">
-        <div id="dashboard" class="page active">
-            <h1>لوحة التحكم</h1>
-            <div class="dashboard-cards">
-                <div class="dash-card">
-                    <h3 id="dash-items-count">0</h3>
-                    <p>عدد الأصناف</p>
-                </div>
-                <div class="dash-card">
-                    <h3 id="dash-bills-count">0</h3>
-                    <p>عدد الفواتير</p>
-                </div>
-                <div class="dash-card">
-                    <h3 id="dash-revenue">0.00</h3>
-                    <p>إجمالي مشتريات (تقديري)</p>
-                </div>
-            </div>
-            <div class="chart-container">
-                <div class="chart-grid">
-                    <div class="chart-panel">
-                        <h4>إيرادات (آخر 6 أشهر)</h4>
-                        <canvas id="dashboard-revenue-chart" height="180"></canvas>
-                    </div>
-                    <div class="chart-panel">
-                        <h4>موجز</h4>
-                        <canvas id="dashboard-chart" height="140"></canvas>
-                    </div>
-                </div>
-            </div>
-            <p>مرحبا بك في لوحة التحكم. هنا سترى نظرة عامة على عملك.</p>
-        </div>
-        <div id="procurement" class="page">
-            <h1>اداره المشتريات</h1>
-            <div class="procurement-layout">
-                <!-- Bill Creation Form -->
-                <div class="bill-form-container">
-                    <h2>فاتورة جديدة</h2>
-                    <form id="bill-form">
-                        <div id="bill-items-container">
-                            <!-- Bill item rows will be dynamically added here -->
-                        </div>
-                        <button type="button" id="add-bill-item-btn" class="add-item-btn">+ إضافة صنف</button>
-                        
-                        <hr class="divider">
-
-                        <div class="bill-summary">
-                            <div class="summary-row">
-                                <span>طريقة الدفع:</span>
-                                <select id="payment-method">
-                                    <option value="cash">نقدي</option>
-                                    <option value="card">بطاقة</option>
-                                </select>
-                            </div>
-                            <div class="summary-row">
-                                <span>المبلغ المدفوع:</span>
-                                <input type="number" id="amount-paid" value="0" min="0" step="0.01">
-                            </div>
-                            <div class="summary-row total">
-                                <span>الإجمالي:</span>
-                                <span id="bill-total">0.00</span>
-                            </div>
-                            <div class="summary-row remaining">
-                                <span>المتبقي:</span>
-                                <span id="bill-remaining">0.00</span>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="submit-btn large">حفظ الفاتورة</button>
-                    </form>
-                </div>
-                
-                <!-- Recent Bills & Search -->
-                <div class="recent-bills-container">
-                    <div class="search-container">
-                        <input type="text" id="bill-search" placeholder="ابحث عن فاتورة برقمها...">
-                    </div>
-                    <h2>الفواتير الأخيرة</h2>
-                    <div id="recent-bills-list">
-                        <!-- Recent bill cards will be injected here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bill Details Display -->
-            <div id="bill-details-container" class="bill-details-container" style="display: none;">
-                <h2 id="bill-details-title">تفاصيل الفاتورة</h2>
-                <div id="bill-details-content"></div>
-            </div>
-
-            <!-- Item Search Modal -->
-            <div id="item-search-modal" class="modal">
-                <div class="modal-content large">
-                    <button class="close-btn">&times;</button>
-                    <h3>البحث عن صنف</h3>
-                    <input type="text" id="item-search-input" class="modal-search" placeholder="اكتب اسم الصنف للبحث...">
-                    <div id="item-search-results">
-                        <!-- Item search results will be shown here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="add-items" class="page">
-            <h1>اضافه الاصناف</h1>
-    
-            <div class="form-container">
-                <form id="item-form">
-                    <input type="hidden" id="item-id">
-                    <div class="form-group">
-                        <label for="item-name">اسم الصنف</label>
-                        <input type="text" id="item-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="item-description">الوصف (اختياري)</label>
-                        <textarea id="item-description" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>صورة الصنف</label>
-                        <div id="drop-zone" class="drop-zone">
-                            <span class="drop-zone-text">اسحب وأفلت الصورة هنا أو انقر للاختيار</span>
-                            <input type="file" id="item-image" accept="image/*" class="drop-zone-input">
-                            <div id="image-preview-container" class="image-preview-container"></div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="item-qrcode">QR Code</label>
-                        <div class="qr-group">
-                            <input type="text" id="item-qrcode" placeholder="امسح الرمز أو أدخله يدويًا">
-                            <button type="button" id="scan-qr-btn" class="icon-btn">📷</button>
-                        </div>
-                    </div>
-                    <button type="submit" class="submit-btn">إضافة الصنف</button>
-                    <button type="button" id="cancel-edit-btn" class="cancel-btn" style="display: none;">إلغاء التعديل</button>
-                </form>
-            </div>
-    
-            <hr>
-
-            <div class="items-search">
-                <input type="search" id="items-search" placeholder="ابحث عن صنف بالاسم أو الوصف أو QR..." />
-            </div>
-
-            <h2>الأصناف المضافة</h2>
-            <div id="items-list" class="cards-container">
-                <!-- Item cards will be injected here by JavaScript -->
-            </div>
-    
-            <!-- QR Scanner Modal -->
-            <div id="qr-scanner-modal" class="modal">
-                <div class="modal-content">
-                    <button class="close-btn">&times;</button>
-                    <h3>امسح QR Code</h3>
-                    <div class="video-container">
-                        <video id="qr-video" playsinline></video>
-                        <div class="scanner-overlay"></div>
-                    </div>
-					<p id="qr-result">جاري البحث عن رمز...</p>
-                </div>
-            </div>
-        </div>
-        <div id="inventory" class="page">
-            <h1>المخزن</h1>
-            <div class="items-search">
-                <input type="search" id="inventory-search" placeholder="ابحث في المخزن..." />
-            </div>
-            <div id="inventory-list" class="cards-container">
-                <!-- inventory items will render here -->
-            </div>
+        <h1>مرحبا بك في VIENNA</h1>
+        <p>اختر صفحة من الأعلى للانتقال: لوحة التحكم، المشتريات، الأصناف، أو المخزن.</p>
+        <div class="dashboard-cards">
+            <div class="dash-card"><h3>📈</h3><p><a href="pages/dashboard/dashboard.html">لوحة التحكم</a></p></div>
+            <div class="dash-card"><h3>🛒</h3><p><a href="pages/procurement/procurement.html">المشتريات</a></p></div>
+            <div class="dash-card"><h3>➕</h3><p><a href="pages/items/items.html">الأصناف</a></p></div>
+            <div class="dash-card"><h3>📦</h3><p><a href="pages/inventory/inventory.html">المخزن</a></p></div>
         </div>
     </main>
     <script src="script.js"></script>

@@ -1,0 +1,13 @@
+:root{--pc-border:rgba(15,40,84,.12)}
+body{font-family:"Cairo",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.pc-card{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.45);border-radius:18px;box-shadow:0 10px 28px rgba(15,40,84,.10);backdrop-filter:blur(8px);padding:14px}
+.pc-header{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.pc-stats{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.pc-stat-label{color:rgba(15,40,84,.62);font-size:13px}
+.pc-stat-value{font-size:34px;font-weight:800;color:#0f2b53;line-height:1}
+.pc-stat.sm .pc-stat-value{font-size:22px;font-weight:800}
+.pc-controls{min-width:180px}
+.pc-stage{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--pc-border);background:linear-gradient(180deg,rgba(15,43,83,.04),rgba(15,43,83,.02))}
+#video{width:100%;height:auto;display:block;transform:scaleX(-1)}
+#overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pc-status{margin-top:10px;color:rgba(15,40,84,.70);font-size:14px}
