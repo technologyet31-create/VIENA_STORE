@@ -1,11 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>VIENNA</title>
+    <link rel="stylesheet" href="mainColors.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3>VIENNA</h3>
+            <button id="toggle-btn">☰</button>
+        </div>
+        <ul class="nav-list">
+            <li><a href="#" class="nav-link active" data-page="dashboard"><span class="icon">📈</span><span class="link-text">لوحة التحكم</span></a></li>
+            <li><a href="#" class="nav-link" data-page="procurement"><span class="icon">🛒</span><span class="link-text">اداره المشتريات</span></a></li>
+            <li><a href="#" class="nav-link" data-page="add-items"><span class="icon">➕</span><span class="link-text">اضافه الاصناف</span></a></li>
+            <li><a href="#" class="nav-link" data-page="inventory"><span class="icon">📦</span><span class="link-text">المخزن</span></a></li>
+        </ul>
+    </div>
+    <main id="main-content" class="content">
+        <div id="dashboard" class="page active">
+            <h1>لوحة التحكم</h1>
+            <p>مرحبا بك في لوحة التحكم. هنا سترى نظرة عامة على عملك.</p>
+        </div>
+        <div id="procurement" class="page">
+            <h1>اداره المشتريات</h1>
+            <p>هذه هي صفحة إدارة المشتريات. يمكنك إدارة مشترياتك من هنا.</p>
+        </div>
+        <div id="add-items" class="page">
+            <h1>اضافه الاصناف</h1>
+            <p>هذه هي صفحة إضافة أصناف جديدة إلى مخزونك.</p>
+        </div>
+        <div id="inventory" class="page">
+            <h1>المخزن</h1>
+            <p>هذه هي صفحة المخزن. يمكنك عرض وإدارة مخزونك من هنا.</p>
+        </div>
+    </main>
+    <script src="script.js"></script>
 </body>
 </html>
