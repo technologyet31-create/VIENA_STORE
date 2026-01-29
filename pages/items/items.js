@@ -37,7 +37,9 @@
     let scanningStream = null;
     let scanAnimationId = null;
     const canvas = document.createElement('canvas');
-    const canvasCtx = canvas.getContext && canvas.getContext('2d');
+    const canvasCtx = canvas.getContext
+      ? (canvas.getContext('2d', { willReadFrequently: true }) || canvas.getContext('2d'))
+      : null;
 
     const stopScan = () => {
       if (scanAnimationId) cancelAnimationFrame(scanAnimationId);
@@ -167,10 +169,11 @@
       }
 
       filtered.slice().reverse().forEach(item => {
+        const imgSrc = item.image_url || item.image || 'https://placehold.co/600x400/bde8f5/0f2854?text=No+Image';
         const card = document.createElement('div');
         card.className = 'item-card';
         card.innerHTML = `
-          <img src="${item.image || 'https://placehold.co/600x400/bde8f5/0f2854?text=No+Image'}" alt="">
+          <img src="${imgSrc}" alt="">
           <div class="card-content">
             <h3>${item.name}</h3>
             <p>${item.description || ''}</p>
@@ -190,7 +193,8 @@
           nameInput.value = item.name || '';
           descInput.value = item.description || '';
           qrInput.value = item.qrcode || '';
-          if (item.image) { setImagePreview(item.image); currentImageData = item.image; } else { clearImagePreview(); }
+          const existingImg = item.image_url || item.image || null;
+          if (existingImg) { setImagePreview(existingImg); currentImageData = existingImg; } else { clearImagePreview(); }
           cancelEditBtn.style.display = 'inline-block';
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -229,7 +233,7 @@
       const patch = {
         name,
         description: descInput.value.trim() || null,
-        image: currentImageData || null,
+        image_url: currentImageData || null,
         qrcode: (qrInput.value || '').trim() || null,
       };
 
@@ -253,7 +257,10 @@
         if (window.Vienna && Vienna.toast) Vienna.toast('تم حفظ الصنف بنجاح.', 'success');
       } catch (e2) {
         console.error(e2);
-        if (window.Vienna && Vienna.toast) Vienna.toast('تعذر حفظ الصنف. تحقق من الاتصال والصلاحيات.', 'error');
+        const msg = String(e2?.message || e2?.error_description || e2?.details || e2 || '').trim();
+        if (window.Vienna && Vienna.toast) {
+          Vienna.toast(msg ? `تعذر حفظ الصنف: ${msg}` : 'تعذر حفظ الصنف. تحقق من الاتصال والصلاحيات.', 'error');
+        }
       }
     });
 

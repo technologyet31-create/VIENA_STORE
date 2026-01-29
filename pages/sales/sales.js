@@ -20,6 +20,7 @@
     rows: [],
     filteredRows: [],
     cart: new Map(), // item_id -> { itemId, name, sellPrice, qty }
+    orderCustomerId: null,
   };
 
   const toast = (msg, type='info') => {
@@ -247,6 +248,33 @@
     };
   };
 
+  const setOrderCustomerFromRow = (c) => {
+    state.orderCustomerId = c?.id || null;
+    if (custNameEl) custNameEl.value = c?.name || '';
+    if (custPhoneEl) custPhoneEl.value = c?.phone || '';
+    if (custPhone2El) custPhone2El.value = c?.phone_extra || '';
+    if (custAddressEl) custAddressEl.value = c?.address || '';
+  };
+
+  const lookupCustomerByPhone = async () => {
+    const phone = (custPhoneEl?.value || '').trim();
+    if (!phone) { state.orderCustomerId = null; return; }
+    if (!(window.SupabaseIntegration && SupabaseIntegration.findCustomerByPhone)) return;
+
+    try {
+      const c = await SupabaseIntegration.findCustomerByPhone(phone);
+      if (c && c.id) {
+        setOrderCustomerFromRow(c);
+        toast('تم العثور على زبون محفوظ بهذا الرقم.', 'info');
+      } else {
+        state.orderCustomerId = null;
+      }
+    } catch (e) {
+      // If customers table isn't present or RLS blocks it, don't block order creation.
+      console.warn('lookupCustomerByPhone failed', e);
+    }
+  };
+
   const buildLegacyOrderNotesJson = (lines) => {
     const customer = buildOrderCustomer();
     const payload = {
@@ -280,12 +308,35 @@
       const freeTextNotes = (orderNotesEl?.value || '').trim() || null;
       const legacyNotes = buildLegacyOrderNotesJson(lines);
 
-      const orderId = await SupabaseIntegration.createOrder(null, lines.map(l => ({
+      // Optional: store/update customer in customers table for reuse.
+      let customerId = state.orderCustomerId || null;
+      try {
+        if (window.SupabaseIntegration && SupabaseIntegration.upsertCustomer) {
+          const hasAnyCustomerField = Boolean(customer.name || customer.phone || customer.phoneExtra || customer.address);
+          if (hasAnyCustomerField) {
+            const saved = await SupabaseIntegration.upsertCustomer({
+              id: customerId,
+              name: customer.name,
+              phone: customer.phone,
+              phone_extra: customer.phoneExtra,
+              address: customer.address,
+              notes: null,
+            });
+            customerId = saved?.id || customerId;
+            state.orderCustomerId = customerId;
+          }
+        }
+      } catch (e) {
+        console.warn('upsertCustomer failed (continuing)', e);
+      }
+
+      const orderId = await SupabaseIntegration.createOrder(customerId, lines.map(l => ({
         itemId: l.itemId,
         qty: l.qty,
         desiredPrice: l.sellPrice,
       })), {
         // v2 columns (preferred)
+        customerId,
         customerName: customer.name,
         customerPhone: customer.phone,
         customerPhoneExtra: customer.phoneExtra,
@@ -297,6 +348,7 @@
 
       toast(`تم إرسال الطلب بنجاح: ${orderId}`, 'success');
       state.cart.clear();
+      state.orderCustomerId = null;
       renderCart();
       await load();
     } catch (e) {
@@ -314,6 +366,7 @@
   confirmBtn?.addEventListener('click', submitSale);
   createOrderBtn?.addEventListener('click', submitOrder);
   clearBtn?.addEventListener('click', clearCart);
+  custPhoneEl?.addEventListener('blur', () => { lookupCustomerByPhone(); });
 
   (async () => {
     try {

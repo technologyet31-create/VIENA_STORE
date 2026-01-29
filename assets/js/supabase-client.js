@@ -80,8 +80,18 @@
       await this.ensureReady();
       const { data, error } = await this._client
         .from('inventory')
-        .select('item_id,quantity,item:items(id,name,description,image,qrcode,sell_price,last_buy_price)');
-      if (error) throw error;
+        .select('item_id,quantity,item:items(id,name,description,image_url,image,qrcode,sell_price,last_buy_price)');
+      if (error) {
+        const msg = String(error?.message || error || '');
+        const isMissingColumn = msg.includes('column') && msg.includes('does not exist');
+        if (!isMissingColumn) throw error;
+        // fallback for schemas without image_url
+        const retry = await this._client
+          .from('inventory')
+          .select('item_id,quantity,item:items(id,name,description,image,qrcode,sell_price,last_buy_price)');
+        if (retry.error) throw retry.error;
+        return retry.data || [];
+      }
       return data || [];
     },
   };
