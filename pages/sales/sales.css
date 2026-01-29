@@ -1,0 +1,57 @@
+/* Page-specific touches. Shared layout comes from assets/css/shared.css */
+
+.sales-layout{
+  display:grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 992px){
+  .sales-layout{ grid-template-columns: 1fr; }
+}
+
+.sales-products{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.product-card{
+  border: 1px solid rgba(15,40,84,0.08);
+  border-radius: 16px;
+  padding: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15,40,84,0.06);
+}
+
+.product-meta{ color: rgba(15,40,84,0.65); font-size: 13px; }
+
+.cart-card{
+  position: sticky;
+  top: 16px;
+  align-self: start;
+}
+
+.cart-items{ display:flex; flex-direction:column; gap:10px; }
+
+.cart-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(15,40,84,0.08);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.9);
+}
+
+.cart-row .name{ font-weight: 700; }
+
+.qty-input{ width: 84px; }
+
+.sales-order-box{
+  border: 1px solid rgba(15,40,84,0.08);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(245,249,255,0.7);
+}

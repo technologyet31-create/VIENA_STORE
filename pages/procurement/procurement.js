@@ -1,5 +1,5 @@
 (function(){
-  function initializeProcurementPage(){
+  async function initializeProcurementPage(){
     const billForm = document.getElementById('bill-form');
     if (!billForm) return;
 
@@ -19,8 +19,79 @@
     const itemSearchResults = document.getElementById('item-search-results');
     const closeItemSearchBtn = itemSearchModal.querySelector('.close-btn');
 
+    const billFormTitle = document.getElementById('bill-form-title');
+    const cancelEditBtn = document.getElementById('cancel-bill-edit-btn');
+
     let currentItemRow = null;
-    let bills = Vienna.storage.get('vienna-bills', []);
+    let editingBillId = null;
+    let items = [];
+    let bills = [];
+
+    const ensureSupabase = async () => {
+      if (!(window.SupabaseSvc && SupabaseSvc.ensureReady)) throw new Error('Supabase client not loaded');
+      await SupabaseSvc.ensureReady();
+    };
+
+    const shortId = (id) => {
+      const s = String(id || '');
+      if (s.length <= 8) return s;
+      return s.slice(0, 4) + '…' + s.slice(-4);
+    };
+
+    const loadItems = async () => {
+      await ensureSupabase();
+      items = await SupabaseSvc.listItems(500);
+    };
+
+    const loadBills = async () => {
+      await ensureSupabase();
+      // Prefer the RPC if installed; fall back to table query.
+      try {
+        const res = await SupabaseSvc.lastBills(50);
+        if (Array.isArray(res)) {
+          bills = res.map(b => ({
+            id: b.id,
+            date: b.created_at || b.date || new Date().toISOString(),
+            paymentMethod: b.payment_method || b.paymentMethod || 'cash',
+            paid: Number(b.paid || 0),
+            total: Number(b.total || 0),
+            remaining: Number(b.remaining || 0),
+            items: (b.items || b.bill_items || []).map(it => ({
+              itemId: it.item_id ?? it.itemId,
+              itemName: it.item_name ?? it.itemName ?? it.name ?? '—',
+              qty: Number(it.qty || 0),
+              buyPrice: Number(it.buy_price ?? it.buyPrice ?? 0),
+              sellPrice: Number(it.sell_price ?? it.sellPrice ?? 0),
+            })),
+          }));
+          return;
+        }
+      } catch (e) {
+        // ignore and fall through
+      }
+
+      const { data, error } = await SupabaseSvc._client
+        .from('bills')
+        .select('id,created_at,payment_method,paid,total,remaining,bill_items(item_id,qty,buy_price,sell_price,item:items(name))')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      bills = (data || []).map(b => ({
+        id: b.id,
+        date: b.created_at,
+        paymentMethod: b.payment_method || 'cash',
+        paid: Number(b.paid || 0),
+        total: Number(b.total || 0),
+        remaining: Number(b.remaining || 0),
+        items: (b.bill_items || []).map(it => ({
+          itemId: it.item_id,
+          itemName: (it.item && it.item.name) ? it.item.name : '—',
+          qty: Number(it.qty || 0),
+          buyPrice: Number(it.buy_price || 0),
+          sellPrice: Number(it.sell_price || 0),
+        })),
+      }));
+    };
 
     const calculateTotals = () => {
       let total = 0;
@@ -31,14 +102,17 @@
         if (!Number.isFinite(qty)) qty = 0;
         qty = Math.floor(qty);
         row.querySelector('.item-qty').value = qty;
-        if (price < 0) price = 0; if (!Number.isFinite(price)) price = 0; row.querySelector('.item-buy-price').value = price;
-        const subtotal = qty * price; row.querySelector('.item-subtotal').textContent = subtotal.toFixed(2); total += subtotal;
+        if (price < 0) price = 0;
+        if (!Number.isFinite(price)) price = 0;
+        row.querySelector('.item-buy-price').value = price;
+        const subtotal = qty * price;
+        row.querySelector('.item-subtotal').textContent = subtotal.toFixed(2);
+        total += subtotal;
       });
       billTotalEl.textContent = total.toFixed(2);
 
       let paid = parseFloat(amountPaidInput.value) || 0;
       if (!Number.isFinite(paid) || paid < 0) paid = 0;
-      // لا نسمح بأن يصبح "المدفوع" أكبر من الإجمالي حتى لا يصبح "الباقي" سالبًا
       if (paid > total) paid = total;
       amountPaidInput.value = paid.toFixed(2);
 
@@ -47,10 +121,20 @@
       billRemainingEl.style.color = remaining > 0 ? '#e74c3c' : 'var(--dark-blue)';
     };
 
+    const fillPricesForRow = (itemId, row) => {
+      if (!itemId) return;
+      const it = items.find(i => String(i.id) === String(itemId));
+      if (!it) return;
+      const buyEl = row.querySelector('.item-buy-price');
+      const sellEl = row.querySelector('.item-sell-price');
+      if (buyEl && it.last_buy_price != null) buyEl.value = Number(it.last_buy_price).toFixed(2);
+      if (sellEl && it.sell_price != null) sellEl.value = Number(it.sell_price);
+    };
+
     const createBillItemRow = () => {
-      const row = document.createElement('div'); row.className = 'bill-item-row';
-      const itemsLocal = Vienna.storage.get('vienna-items', []) || [];
-      const recentItems = itemsLocal.slice(-5);
+      const row = document.createElement('div');
+      row.className = 'bill-item-row';
+      const recentItems = items.slice(0, 6);
       const options = recentItems.map(item => `<option value="${item.id}">${item.name}</option>`).join('');
       row.innerHTML = `
         <div class="form-group">
@@ -65,68 +149,153 @@
         <div class="form-group"><input type="number" class="item-qty" placeholder="الكمية" min="1" value="1"></div>
         <div class="form-group"><input type="number" class="item-buy-price" placeholder="سعر الشراء" min="0" step="0.01"></div>
         <div class="form-group"><input type="number" class="item-sell-price" placeholder="سعر البيع" min="0" step="0.01"></div>
-        <div class="subtotal-group"><span class="item-subtotal">0.00</span><button type="button" class="remove-item-row-btn">&times;</button></div>`;
+        <div class="subtotal-group"><span class="item-subtotal">0.00</span><button type="button" class="remove-item-row-btn">&times;</button></div>
+      `;
 
-      row.querySelector('.remove-item-row-btn').addEventListener('click', () => { row.remove(); calculateTotals(); });
-      row.querySelector('.more-items-btn').addEventListener('click', () => { currentItemRow = row; itemSearchModal.style.display = 'block'; renderItemSearchResults(''); });
-      row.querySelector('.item-select').addEventListener('change', () => row.querySelector('.item-buy-price').focus());
-      const qtyInput = row.querySelector('.item-qty'); const buyInput = row.querySelector('.item-buy-price'); const sellInput = row.querySelector('.item-sell-price');
-      const ensureNonNegativeInteger = (el) => { let v = parseFloat(el.value) || 0; if (!Number.isFinite(v) || v < 0) v = 0; v = Math.floor(v); el.value = v; };
+      row.querySelector('.remove-item-row-btn').addEventListener('click', () => {
+        row.remove();
+        calculateTotals();
+      });
+
+      row.querySelector('.more-items-btn').addEventListener('click', () => {
+        currentItemRow = row;
+        itemSearchModal.style.display = 'block';
+        renderItemSearchResults('');
+      });
+
+      row.querySelector('.item-select').addEventListener('change', () => {
+        const selected = row.querySelector('.item-select').value;
+        fillPricesForRow(selected, row);
+        row.querySelector('.item-buy-price').focus();
+      });
+
+      const qtyInput = row.querySelector('.item-qty');
+      const buyInput = row.querySelector('.item-buy-price');
+      const sellInput = row.querySelector('.item-sell-price');
+
+      const ensureNonNegativeInteger = (el) => {
+        let v = parseFloat(el.value) || 0;
+        if (!Number.isFinite(v) || v < 0) v = 0;
+        v = Math.floor(v);
+        el.value = v;
+      };
       qtyInput.addEventListener('input', () => { ensureNonNegativeInteger(qtyInput); calculateTotals(); });
       buyInput.addEventListener('input', () => { if (parseFloat(buyInput.value) < 0) buyInput.value = 0; calculateTotals(); });
       sellInput.addEventListener('input', () => { if (parseFloat(sellInput.value) < 0) sellInput.value = 0; calculateTotals(); });
 
-      billItemsContainer.appendChild(row); return row;
+      billItemsContainer.appendChild(row);
+      return row;
     };
 
     const renderBillDetails = (bill) => {
-      billDetailsTitle.textContent = `تفاصيل الفاتورة #${bill.id}`;
+      billDetailsTitle.textContent = `تفاصيل الفاتورة #${shortId(bill.id)}`;
       const itemsTable = `
         <table>
           <thead><tr><th>الصنف</th><th>الكمية</th><th>سعر الشراء</th><th>الإجمالي الجزئي</th></tr></thead>
           <tbody>
-            ${bill.items.map(item => `
-              <tr><td>${item.itemName}</td><td>${item.qty}</td><td>${item.buyPrice.toFixed(2)}</td><td>${(item.qty * item.buyPrice).toFixed(2)}</td></tr>
+            ${(bill.items || []).map(item => `
+              <tr><td>${item.itemName}</td><td>${item.qty}</td><td>${Number(item.buyPrice).toFixed(2)}</td><td>${(Number(item.qty) * Number(item.buyPrice)).toFixed(2)}</td></tr>
             `).join('')}
           </tbody>
         </table>`;
       const summaryDetails = `
         <div id="bill-details-summary">
           <div>
-            <div class="summary-row"><span>الإجمالي:</span><span>${bill.total.toFixed(2)}</span></div>
-            <div class="summary-row"><span>المدفوع:</span><span>${bill.paid.toFixed(2)}</span></div>
-            <div class="summary-row remaining"><span>المتبقي:</span><span>${bill.remaining.toFixed(2)}</span></div>
+            <div class="summary-row"><span>الإجمالي:</span><span>${Number(bill.total).toFixed(2)}</span></div>
+            <div class="summary-row"><span>المدفوع:</span><span>${Number(bill.paid).toFixed(2)}</span></div>
+            <div class="summary-row remaining"><span>المتبقي:</span><span>${Number(bill.remaining).toFixed(2)}</span></div>
             <div class="summary-row"><span>طريقة الدفع:</span><span>${bill.paymentMethod === 'cash' ? 'نقدي' : 'بطاقة'}</span></div>
             <div class="summary-row"><span>التاريخ:</span><span>${new Date(bill.date).toLocaleString()}</span></div>
           </div>
         </div>`;
-      billDetailsContent.innerHTML = itemsTable + summaryDetails; billDetailsContainer.style.display = 'block';
+      billDetailsContent.innerHTML = itemsTable + summaryDetails;
+      billDetailsContainer.style.display = 'block';
     };
 
     const renderRecentBills = (filterQuery = '') => {
       recentBillsList.innerHTML = '';
-      const filteredBills = bills.filter(bill => bill.id.toString().includes(filterQuery)).slice(-10).reverse();
-      if (filteredBills.length === 0) { recentBillsList.innerHTML = '<p>لا توجد فواتير تطابق البحث.</p>'; return; }
+      const q = String(filterQuery || '').trim();
+      const filteredBills = bills
+        .filter(bill => !q || String(bill.id).includes(q))
+        .slice(0, 10);
+
+      if (filteredBills.length === 0) {
+        recentBillsList.innerHTML = '<p>لا توجد فواتير تطابق البحث.</p>';
+        return;
+      }
+
       filteredBills.forEach(bill => {
-        const card = document.createElement('div'); card.className = 'recent-bill-card'; card.dataset.billId = bill.id;
-        card.innerHTML = `<strong>فاتورة #${bill.id}</strong><span>${new Date(bill.date).toLocaleDateString()}</span>`;
-        card.addEventListener('click', () => { document.querySelectorAll('.recent-bill-card').forEach(c => c.classList.remove('selected')); card.classList.add('selected'); renderBillDetails(bill); });
+        const card = document.createElement('div');
+        card.className = 'recent-bill-card';
+        card.dataset.billId = bill.id;
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+            <div>
+              <strong>فاتورة #${shortId(bill.id)}</strong>
+              <div style="font-size:12px;color:var(--vienna-muted);">${new Date(bill.date).toLocaleDateString()}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-sm btn-outline-secondary view-bill-btn">عرض</button>
+              <button class="btn btn-sm btn-outline-primary edit-bill-btn">تعديل</button>
+              <button class="btn btn-sm btn-outline-danger delete-bill-btn">حذف</button>
+            </div>
+          </div>`;
+
+        card.querySelector('.view-bill-btn').addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          document.querySelectorAll('.recent-bill-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          renderBillDetails(bill);
+        });
+
+        card.querySelector('.edit-bill-btn').addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          beginEditBill(bill);
+        });
+
+        card.querySelector('.delete-bill-btn').addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          const ok = window.confirm('هل أنت متأكد أنك تريد حذف هذه الفاتورة؟');
+          if (!ok) return;
+          try {
+            await ensureSupabase();
+            await SupabaseSvc.deleteProcurement(String(bill.id));
+            if (String(editingBillId) === String(bill.id)) cancelEdit();
+            await loadBills();
+            renderRecentBills(billSearchInput.value || '');
+            billDetailsContainer.style.display = 'none';
+            if (window.Vienna && Vienna.toast) Vienna.toast('تم حذف الفاتورة.', 'info');
+          } catch (e) {
+            console.error(e);
+            if (window.Vienna && Vienna.toast) Vienna.toast('تعذر حذف الفاتورة. تحقق من الاتصال والصلاحيات.', 'error');
+          }
+        });
+
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.recent-bill-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          renderBillDetails(bill);
+        });
+
         recentBillsList.appendChild(card);
       });
     };
 
     const renderItemSearchResults = (query) => {
       itemSearchResults.innerHTML = '';
-      const itemsLocal = Vienna.storage.get('vienna-items', []) || [];
-      const filteredItems = itemsLocal.filter(item => (item.name || '').toLowerCase().includes(query.toLowerCase()));
+      const q = (query || '').toLowerCase().trim();
+      const filteredItems = items.filter(item => (item.name || '').toLowerCase().includes(q));
       filteredItems.forEach(item => {
-        const itemEl = document.createElement('div'); itemEl.className = 'search-result-item';
+        const itemEl = document.createElement('div');
+        itemEl.className = 'search-result-item';
         itemEl.innerHTML = `<img src="${item.image || 'https://placehold.co/100x100/bde8f5/0f2854?text=??'}" alt=""><span>${item.name}</span>`;
         itemEl.addEventListener('click', () => {
           if (currentItemRow) {
             const select = currentItemRow.querySelector('.item-select');
             if (!select.querySelector(`option[value="${item.id}"]`)) select.add(new Option(item.name, item.id, true, true));
-            select.value = item.id; currentItemRow.querySelector('.item-buy-price').focus();
+            select.value = item.id;
+            fillPricesForRow(item.id, currentItemRow);
+            currentItemRow.querySelector('.item-buy-price').focus();
           }
           itemSearchModal.style.display = 'none';
         });
@@ -134,47 +303,76 @@
       });
     };
 
-    billForm.addEventListener('submit', (e) => {
+    const beginEditBill = (bill) => {
+      if (!bill) return;
+      editingBillId = bill.id;
+      billItemsContainer.innerHTML = '';
+      (bill.items || []).forEach(it => {
+        const row = createBillItemRow();
+        const select = row.querySelector('.item-select');
+        if (!select.querySelector(`option[value="${it.itemId}"]`)) select.add(new Option(it.itemName, it.itemId, true, true));
+        select.value = it.itemId;
+        row.querySelector('.item-qty').value = it.qty;
+        row.querySelector('.item-buy-price').value = Number(it.buyPrice).toFixed(2);
+        row.querySelector('.item-sell-price').value = (it.sellPrice != null) ? Number(it.sellPrice) : '';
+      });
+      document.getElementById('payment-method').value = bill.paymentMethod || 'cash';
+      amountPaidInput.value = Number(bill.paid || 0).toFixed(2);
+      calculateTotals();
+      if (billFormTitle) billFormTitle.textContent = `تعديل الفاتورة #${shortId(bill.id)}`;
+      if (cancelEditBtn) cancelEditBtn.style.display = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const cancelEdit = () => {
+      editingBillId = null;
+      billItemsContainer.innerHTML = '';
+      billForm.reset();
+      createBillItemRow();
+      calculateTotals();
+      if (billFormTitle) billFormTitle.textContent = 'فاتورة جديدة';
+      if (cancelEditBtn) cancelEditBtn.style.display = 'none';
+    };
+
+    if (cancelEditBtn) cancelEditBtn.addEventListener('click', cancelEdit);
+
+    billForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const billItems = []; let valid = true;
+      const billItems = [];
+      let valid = true;
       billItemsContainer.querySelectorAll('.bill-item-row').forEach(row => {
-        const itemId = row.querySelector('.item-select').value; if (!itemId) { valid = false; return; }
+        const itemId = row.querySelector('.item-select').value;
+        if (!itemId) { valid = false; return; }
         const qty = Math.floor(parseFloat(row.querySelector('.item-qty').value) || 0);
         const buyPrice = parseFloat(row.querySelector('.item-buy-price').value) || 0;
         const sellPrice = parseFloat(row.querySelector('.item-sell-price').value) || 0;
-        billItems.push({ itemId, itemName: row.querySelector('.item-select').options[row.querySelector('.item-select').selectedIndex].text, qty, buyPrice, sellPrice });
+        billItems.push({ item_id: itemId, qty, buy_price: buyPrice, sell_price: sellPrice });
       });
       if (!valid || billItems.length === 0) { alert('الرجاء إضافة صنف واحد على الأقل واختياره.'); return; }
-
-      // مشتريات = إضافة للمخزن، لذلك لا يوجد حد أعلى مرتبط بالمخزون هنا
       for (const it of billItems) {
-        if (!Number.isFinite(it.qty) || it.qty <= 0) { alert(`الكمية للصنف "${it.itemName}" يجب أن تكون أكبر من صفر.`); return; }
-        if (!Number.isFinite(it.buyPrice) || it.buyPrice < 0) { alert(`سعر الشراء للصنف "${it.itemName}" غير صالح.`); return; }
+        if (!Number.isFinite(it.qty) || it.qty <= 0) { alert('الكمية يجب أن تكون أكبر من صفر.'); return; }
+        if (!Number.isFinite(it.buy_price) || it.buy_price < 0) { alert('سعر الشراء غير صالح.'); return; }
       }
 
-      const newBill = {
-        id: Date.now(), date: new Date().toISOString(), items: billItems,
-        paymentMethod: document.getElementById('payment-method').value,
-        paid: parseFloat(amountPaidInput.value) || 0,
-        total: parseFloat(billTotalEl.textContent) || 0,
-        remaining: parseFloat(billRemainingEl.textContent) || 0,
-      };
-      bills.push(newBill); Vienna.storage.set('vienna-bills', bills);
-
-      // مشتريات: تزيد الكميات في المخزن
-      const inv = Vienna.storage.get('vienna-inventory', {});
-      newBill.items.forEach(it => {
-        const id = it.itemId;
-        const qty = Math.floor(parseFloat(it.qty) || 0);
-        inv[id] = (parseFloat(inv[id]) || 0) + qty;
-      });
-      Vienna.storage.set('vienna-inventory', inv);
-
-      if (window.Vienna && typeof Vienna.toast === 'function') {
-        Vienna.toast('تم حفظ الفاتورة وتحديث المخزن.', 'success');
+      try {
+        await ensureSupabase();
+        const paymentMethod = document.getElementById('payment-method').value;
+        const paid = parseFloat(amountPaidInput.value) || 0;
+        if (editingBillId) {
+          await SupabaseSvc.updateProcurement(String(editingBillId), paymentMethod, paid, billItems);
+          if (window.Vienna && Vienna.toast) Vienna.toast('تم تحديث الفاتورة.', 'success');
+        } else {
+          await SupabaseSvc.createProcurement(paymentMethod, paid, billItems);
+          if (window.Vienna && Vienna.toast) Vienna.toast('تم حفظ الفاتورة.', 'success');
+        }
+        await loadBills();
+        cancelEdit();
+        renderRecentBills(billSearchInput.value || '');
+        billDetailsContainer.style.display = 'none';
+      } catch (e2) {
+        console.error(e2);
+        if (window.Vienna && Vienna.toast) Vienna.toast('تعذر حفظ الفاتورة. تحقق من الاتصال والصلاحيات.', 'error');
       }
-
-      billItemsContainer.innerHTML = ''; billForm.reset(); calculateTotals(); createBillItemRow(); renderRecentBills(); billDetailsContainer.style.display = 'none';
     });
 
     addBillItemBtn.addEventListener('click', createBillItemRow);
@@ -184,9 +382,18 @@
     closeItemSearchBtn.addEventListener('click', () => itemSearchModal.style.display = 'none');
     window.addEventListener('click', (e) => { if (e.target == itemSearchModal) itemSearchModal.style.display = 'none'; });
 
-    createBillItemRow(); calculateTotals(); renderRecentBills();
+    try {
+      await loadItems();
+      await loadBills();
+      createBillItemRow();
+      calculateTotals();
+      renderRecentBills();
+    } catch (e) {
+      console.error(e);
+      recentBillsList.innerHTML = '<p>لا يمكن تحميل بيانات المشتريات. تأكد من إعداد Supabase.</p>';
+      if (window.Vienna && Vienna.toast) Vienna.toast('Supabase غير جاهز. لا يمكن تحميل المشتريات.', 'error');
+    }
   }
 
-  // init
   initializeProcurementPage();
 })();

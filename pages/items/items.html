@@ -27,43 +27,121 @@
       <li><a href="../procurement/procurement.html" class="sidebar-link"><span class="icon"><i class="bi bi-cart3" aria-hidden="true"></i></span><span class="label">اداره المشتريات</span></a></li>
       <li><a href="items.html" class="sidebar-link active"><span class="icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></span><span class="label">اضافه الاصناف</span></a></li>
       <li><a href="../inventory/inventory.html" class="sidebar-link"><span class="icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span><span class="label">المخزن</span></a></li>
+      <li><a href="../sales/sales.html" class="sidebar-link"><span class="icon"><i class="bi bi-receipt" aria-hidden="true"></i></span><span class="label">المبيعات</span></a></li>
+      <li><a href="../orders/Orders.html" class="sidebar-link"><span class="icon"><i class="bi bi-card-checklist" aria-hidden="true"></i></span><span class="label">الطلبات</span></a></li>
+      <li><a href="../customers/customers.html" class="sidebar-link"><span class="icon"><i class="bi bi-people" aria-hidden="true"></i></span><span class="label">الزبائن</span></a></li>
     </ul>
   </div>
   <main id="main-content" class="content">
-    <h1>اضافه الاصناف</h1>
-    <div class="form-container">
-      <form id="item-form">
-        <input type="hidden" id="item-id">
-        <div class="form-group"><label for="item-name">اسم الصنف</label><input type="text" id="item-name" required></div>
-        <div class="form-group"><label for="item-description">الوصف (اختياري)</label><textarea id="item-description" rows="3"></textarea></div>
-        <div class="form-group">
-          <label>صورة الصنف</label>
-          <div id="drop-zone" class="drop-zone"><span class="drop-zone-text">اسحب وأفلت الصورة هنا أو انقر للاختيار</span><input type="file" id="item-image" accept="image/*" class="drop-zone-input"><div id="image-preview-container" class="image-preview-container"></div></div>
+    <div class="vienna-page-head">
+      <div>
+        <h1 class="mb-1">إضافة الأصناف</h1>
+        <p class="mb-0 vienna-subtitle">أضف صنفًا جديدًا مع صورة و QR، وادِر الأصناف بشكل سريع.</p>
+      </div>
+      <div class="vienna-head-meta">
+        <div class="vienna-chip" title="عدد الأصناف">
+          <i class="bi bi-collection" aria-hidden="true"></i>
+          <span>الإجمالي:</span>
+          <strong id="itemsCount">—</strong>
         </div>
-        <div class="form-group">
-          <label for="item-qrcode">QR Code</label>
-          <div class="qr-group"><input type="text" id="item-qrcode" placeholder="امسح الرمز أو أدخله يدويًا"><button type="button" id="scan-qr-btn" class="icon-btn">📷</button></div>
+        <div class="vienna-chip" title="اختصار">
+          <i class="bi bi-lightning-charge" aria-hidden="true"></i>
+          <span>Ctrl+B</span>
+          <span class="text-muted">للقائمة</span>
         </div>
-        <button type="submit" class="submit-btn">إضافة الصنف</button>
-        <button type="button" id="cancel-edit-btn" class="cancel-btn" style="display: none;">إلغاء التعديل</button>
-      </form>
+      </div>
     </div>
-    <hr>
-    <div class="items-search"><input type="search" id="items-search" placeholder="ابحث عن صنف بالاسم أو الوصف أو QR..." /></div>
-    <h2>الأصناف المضافة</h2>
-    <div id="items-list" class="cards-container"></div>
 
-    <div id="qr-scanner-modal" class="modal">
+    <div class="items-layout">
+      <section class="vienna-card form-card" aria-label="نموذج إضافة صنف">
+        <div class="vienna-card-head">
+          <h2 class="m-0">نموذج الصنف</h2>
+          <div class="vienna-card-hint">املأ البيانات ثم اضغط حفظ.</div>
+        </div>
+
+        <form id="item-form" class="vienna-form">
+          <input type="hidden" id="item-id">
+
+          <div class="vienna-field">
+            <label for="item-name" class="vienna-label">اسم الصنف</label>
+            <input type="text" id="item-name" class="form-control" placeholder="مثال: قهوة عربية" required>
+          </div>
+
+          <div class="vienna-field">
+            <label for="item-description" class="vienna-label">الوصف (اختياري)</label>
+            <textarea id="item-description" class="form-control" rows="3" placeholder="ملاحظات قصيرة عن الصنف..."></textarea>
+          </div>
+
+          <div class="vienna-field">
+            <label class="vienna-label">صورة الصنف</label>
+            <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="رفع صورة الصنف">
+              <div class="drop-zone-inner">
+                <div class="drop-zone-icon"><i class="bi bi-image" aria-hidden="true"></i></div>
+                <div>
+                  <div class="drop-zone-title">اسحب وأفلت الصورة هنا</div>
+                  <div class="drop-zone-sub">أو انقر للاختيار (PNG / JPG)</div>
+                </div>
+              </div>
+              <input type="file" id="item-image" accept="image/*" class="drop-zone-input">
+              <div id="image-preview-container" class="image-preview-container"></div>
+            </div>
+          </div>
+
+          <div class="vienna-field">
+            <label for="item-qrcode" class="vienna-label">QR Code</label>
+            <div class="qr-group">
+              <input type="text" id="item-qrcode" class="form-control" placeholder="امسح الرمز أو أدخله يدويًا" dir="ltr">
+              <button type="button" id="scan-qr-btn" class="icon-btn" title="فتح الكاميرا لمسح QR" aria-label="فتح الكاميرا لمسح QR">
+                <i class="bi bi-camera" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="vienna-help">إذا كان جهازك لا يسمح بالكاميرا، أدخل الكود يدويًا.</div>
+          </div>
+
+          <div class="vienna-actions">
+            <button type="submit" class="btn btn-primary submit-btn">حفظ الصنف</button>
+            <button type="button" id="cancel-edit-btn" class="btn btn-outline-secondary cancel-btn" style="display: none;">إلغاء التعديل</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="vienna-card list-card" aria-label="قائمة الأصناف">
+        <div class="vienna-card-head">
+          <div>
+            <h2 class="m-0">الأصناف المضافة</h2>
+            <div class="vienna-card-hint">ابحث وعدّل واحذف بسهولة.</div>
+          </div>
+          <div class="items-search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" id="items-search" class="form-control" placeholder="ابحث بالاسم أو الوصف أو QR..." />
+          </div>
+        </div>
+
+        <div id="items-list" class="cards-container" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <div id="qr-scanner-modal" class="modal" role="dialog" aria-modal="true" aria-label="ماسح QR">
       <div class="modal-content">
-        <button class="close-btn">&times;</button>
-        <h3>امسح QR Code</h3>
-        <div class="video-container"><video id="qr-video" playsinline></video><div class="scanner-overlay"></div></div>
-        <p id="qr-result">جاري البحث عن رمز...</p>
+        <button class="close-btn" type="button" aria-label="إغلاق">&times;</button>
+        <div class="d-flex align-items-center justify-content-between gap-2" style="padding: 14px 16px; border-bottom: 1px solid rgba(15,40,84,0.08);">
+          <h3 class="m-0" style="font-size: 18px;">امسح QR Code</h3>
+          <span class="badge text-bg-light" style="border: 1px solid rgba(15,40,84,0.10);">كاميرا</span>
+        </div>
+        <div style="padding: 16px;">
+          <div class="video-container">
+            <video id="qr-video" playsinline></video>
+            <div class="scanner-overlay" aria-hidden="true"></div>
+          </div>
+          <p id="qr-result" class="mb-0">جاري البحث عن رمز...</p>
+        </div>
       </div>
     </div>
   </main>
   <script src="../../assets/js/core.js"></script>
   <script src="../../script.js"></script>
+  <script src="../../assets/js/supabase-config.js"></script>
+  <script src="../../assets/js/supabase-client.js"></script>
   <script src="items.js"></script>
 </body>
 </html>

@@ -26,15 +26,28 @@
       <li><a href="../procurement/procurement.html" class="sidebar-link"><span class="icon"><i class="bi bi-cart3" aria-hidden="true"></i></span><span class="label">اداره المشتريات</span></a></li>
       <li><a href="../items/items.html" class="sidebar-link"><span class="icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></span><span class="label">اضافه الاصناف</span></a></li>
       <li><a href="inventory.html" class="sidebar-link active"><span class="icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span><span class="label">المخزن</span></a></li>
+      <li><a href="../sales/sales.html" class="sidebar-link"><span class="icon"><i class="bi bi-receipt" aria-hidden="true"></i></span><span class="label">المبيعات</span></a></li>
+      <li><a href="../orders/Orders.html" class="sidebar-link"><span class="icon"><i class="bi bi-card-checklist" aria-hidden="true"></i></span><span class="label">الطلبات</span></a></li>
+      <li><a href="../customers/customers.html" class="sidebar-link"><span class="icon"><i class="bi bi-people" aria-hidden="true"></i></span><span class="label">الزبائن</span></a></li>
     </ul>
   </div>
   <main id="main-content" class="content">
-    <h1>المخزن</h1>
-    <div class="items-search"><input type="search" id="inventory-search" placeholder="ابحث في المخزن..." /></div>
+    <div class="vienna-page-head">
+      <div>
+        <h1 class="mb-1">المخزن</h1>
+        <p class="mb-0 vienna-subtitle">عرض الكميات (لا يمكن تعديلها هنا) وتعديل سعر البيع فقط.</p>
+      </div>
+      <div class="items-search" role="search">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" id="inventory-search" class="form-control" placeholder="ابحث في المخزن..." />
+      </div>
+    </div>
     <div id="inventory-list" class="cards-container"></div>
   </main>
   <script src="../../assets/js/core.js"></script>
   <script src="../../script.js"></script>
+  <script src="../../assets/js/supabase-config.js"></script>
+  <script src="../../assets/js/supabase-client.js"></script>
   <script src="inventory.js"></script>
 </body>
 </html>

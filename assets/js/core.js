@@ -8,31 +8,28 @@
   Vienna.on = (name, handler) => { bus.addEventListener(name, handler); return () => bus.removeEventListener(name, handler); };
 
   // Storage helpers
+  const __memStore = new Map();
   Vienna.storage = {
-    get(key, fallback){ try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
-    set(key, val){ localStorage.setItem(key, JSON.stringify(val)); Vienna.emit('vienna-data-changed', { key }); }
+    get(key, fallback){
+      if (__memStore.has(key)) return __memStore.get(key);
+      return fallback;
+    },
+    set(key, val){
+      __memStore.set(key, val);
+      Vienna.emit('vienna-data-changed', { key });
+    },
+    remove(key){
+      __memStore.delete(key);
+      Vienna.emit('vienna-data-changed', { key });
+    },
+    clear(){
+      __memStore.clear();
+      Vienna.emit('vienna-data-changed', { key: '*' });
+    }
   };
 
-  // Ensure *any* localStorage writes trigger updates (even from legacy code)
-  if (!Vienna.__storagePatched && typeof localStorage !== 'undefined') {
-    Vienna.__storagePatched = true;
-    const originalSetItem = localStorage.setItem.bind(localStorage);
-    const originalRemoveItem = localStorage.removeItem.bind(localStorage);
-    const originalClear = localStorage.clear.bind(localStorage);
-
-    localStorage.setItem = (key, value) => {
-      originalSetItem(key, value);
-      try { Vienna.emit('vienna-data-changed', { key }); } catch {}
-    };
-    localStorage.removeItem = (key) => {
-      originalRemoveItem(key);
-      try { Vienna.emit('vienna-data-changed', { key }); } catch {}
-    };
-    localStorage.clear = () => {
-      originalClear();
-      try { Vienna.emit('vienna-data-changed', { key: '*' }); } catch {}
-    };
-  }
+  // A promise that resolves when app-level async initialization (like server sync) completes.
+  Vienna.ready = Promise.resolve();
 
   // RTL / theme helpers
   Vienna.rtl = document.documentElement.getAttribute('dir') === 'rtl';

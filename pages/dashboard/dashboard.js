@@ -29,25 +29,40 @@
     if (msg) msg.remove();
   };
 
-  let updateQueued = false;
-  const queueUpdate = () => {
-    if (updateQueued) return;
-    updateQueued = true;
-    requestAnimationFrame(() => {
-      updateQueued = false;
-      updateStats();
-    });
+  const ensureSupabase = async () => {
+    if (!(window.SupabaseSvc && SupabaseSvc.ensureReady)) throw new Error('Supabase client not loaded');
+    await SupabaseSvc.ensureReady();
+    return SupabaseSvc._client;
   };
 
-  const updateStats = () => {
-    const itemsData = Vienna.storage.get('vienna-items', []) || [];
-    const billsData = Vienna.storage.get('vienna-bills', []) || [];
-    const total = billsData.reduce((s, b) => s + (parseFloat(b.total) || 0), 0);
-    if (itemsCountEl) itemsCountEl.textContent = itemsData.length;
-    if (billsCountEl) billsCountEl.textContent = billsData.length;
-    if (revenueEl) revenueEl.textContent = total.toFixed(2);
+  const updateStats = async () => {
+    const client = await ensureSupabase();
 
-    // If Chart.js didn't load (offline / CDN blocked), avoid blank panels.
+    const itemsRes = await client.from('items').select('id', { count: 'exact', head: true });
+    const billsRes = await client.from('bills').select('id', { count: 'exact', head: true });
+
+    const itemsCount = itemsRes.count || 0;
+    const billsCount = billsRes.count || 0;
+    if (itemsCountEl) itemsCountEl.textContent = String(itemsCount);
+    if (billsCountEl) billsCountEl.textContent = String(billsCount);
+
+    // Revenue (sum of bill totals) for last 6 months
+    const monthsCount = 6;
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() - (monthsCount - 1), 1);
+    const startIso = start.toISOString();
+
+    const { data: bills, error: billsErr } = await client
+      .from('bills')
+      .select('created_at,total')
+      .gte('created_at', startIso)
+      .order('created_at', { ascending: true })
+      .limit(2000);
+    if (billsErr) throw billsErr;
+
+    const totalRevenue = (bills || []).reduce((s, b) => s + (Number(b.total) || 0), 0);
+    if (revenueEl) revenueEl.textContent = totalRevenue.toFixed(2);
+
     if (typeof Chart === 'undefined') {
       const msg = 'لا يمكن عرض الرسوم البيانية الآن. تأكد من الاتصال بالإنترنت أو أن رابط Chart.js يعمل.';
       setChartMessage(revenueChartEl, msg);
@@ -56,9 +71,10 @@
       return;
     }
 
+    // Summary chart
     if (chartEl) {
       try {
-        const dataValues = [itemsData.length, billsData.length, Math.round(total)];
+        const dataValues = [itemsCount, billsCount, Math.round(totalRevenue)];
         if (!window.dashboardChart) {
           window.dashboardChart = Vienna.buildSummaryChart(chartEl, ['أصناف','فواتير','إجمالي'], dataValues);
         } else {
@@ -66,49 +82,53 @@
           window.dashboardChart.update();
         }
         clearChartMessage(chartEl);
-      } catch (e) {
+      } catch {
         setChartMessage(chartEl, 'حدثت مشكلة أثناء إنشاء الرسم البياني.');
       }
     }
 
+    // Revenue by month chart
     if (revenueChartEl) {
       try {
-        const monthsCount = 6;
-        const now = new Date();
         const months = [];
         for (let i = monthsCount - 1; i >= 0; i--) months.push(new Date(now.getFullYear(), now.getMonth() - i, 1));
         const monthKeys = months.map(d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
         const sums = monthKeys.map(() => 0);
-        billsData.forEach(b => {
-          const date = new Date(b.date);
+        (bills || []).forEach(b => {
+          const date = new Date(b.created_at);
           if (Number.isNaN(date.getTime())) return;
           const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
           const idx = monthKeys.indexOf(key);
-          if (idx >= 0) sums[idx] += parseFloat(b.total) || 0;
+          if (idx >= 0) sums[idx] += Number(b.total) || 0;
         });
+
         const labels = months.map(d => new Intl.DateTimeFormat('ar-EG', { month: 'short', year: 'numeric' }).format(d));
+        const points = sums.map(v => Math.round(v * 100) / 100);
+
         if (!window.dashboardRevenueChart) {
-          window.dashboardRevenueChart = Vienna.buildLineChart(revenueChartEl, labels, sums.map(v => Math.round(v*100)/100));
+          window.dashboardRevenueChart = Vienna.buildLineChart(revenueChartEl, labels, points);
         } else {
           window.dashboardRevenueChart.data.labels = labels;
-          window.dashboardRevenueChart.data.datasets[0].data = sums.map(v => Math.round(v*100)/100);
+          window.dashboardRevenueChart.data.datasets[0].data = points;
           window.dashboardRevenueChart.update();
         }
         clearChartMessage(revenueChartEl);
-      } catch (e) {
+      } catch {
         setChartMessage(revenueChartEl, 'حدثت مشكلة أثناء إنشاء رسم الإيرادات.');
       }
     }
 
+    // Inventory chart (top 8)
     if (inventoryChartEl) {
       try {
-        const inventory = Vienna.storage.get('vienna-inventory', {}) || {};
-        const rows = itemsData
-          .map(it => ({ name: it.name || '—', qty: Number(inventory[it.id] || 0) }))
-          .sort((a, b) => b.qty - a.qty)
-          .slice(0, 8);
-        const labels = rows.map(r => r.name);
-        const values = rows.map(r => r.qty);
+        const { data: inv, error: invErr } = await client
+          .from('inventory')
+          .select('quantity,item:items(name)')
+          .order('quantity', { ascending: false })
+          .limit(8);
+        if (invErr) throw invErr;
+        const labels = (inv || []).map(r => (r.item && r.item.name) ? r.item.name : '—');
+        const values = (inv || []).map(r => Number(r.quantity) || 0);
 
         if (!window.dashboardInventoryChart) {
           const ctx = inventoryChartEl.getContext('2d');
@@ -140,17 +160,18 @@
           window.dashboardInventoryChart.update();
         }
         clearChartMessage(inventoryChartEl);
-      } catch (e) {
+      } catch {
         setChartMessage(inventoryChartEl, 'حدثت مشكلة أثناء إنشاء رسم المخزن.');
       }
     }
   };
 
-  updateStats();
-  Vienna.on('vienna-data-changed', queueUpdate);
-  // Cross-tab updates
-  window.addEventListener('storage', (e) => {
-    if (!e || !e.key) return;
-    if (e.key.startsWith('vienna-')) queueUpdate();
-  });
+  (async () => {
+    try {
+      await updateStats();
+    } catch (e) {
+      console.error(e);
+      if (window.Vienna && Vienna.toast) Vienna.toast('لا يمكن تحميل بيانات لوحة التحكم. تأكد من إعداد Supabase.', 'error');
+    }
+  })();
 })();

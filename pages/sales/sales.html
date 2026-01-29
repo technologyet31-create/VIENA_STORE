@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VIENNA - المبيعات</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../../mainColors.css" />
+    <link rel="stylesheet" href="../../assets/css/shared.css" />
+    <link rel="stylesheet" href="sales.css" />
+</head>
+<body>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">VIENNA</div>
+            <button id="toggle-btn" aria-label="Toggle sidebar">☰</button>
+            <button class="sidebar-close" type="button" aria-label="إغلاق القائمة">&times;</button>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="../../index.html" class="sidebar-link"><span class="icon"><i class="bi bi-house-door" aria-hidden="true"></i></span><span class="label">الرئيسية</span></a></li>
+            <li><a href="../dashboard/dashboard.html" class="sidebar-link"><span class="icon"><i class="bi bi-bar-chart-line" aria-hidden="true"></i></span><span class="label">لوحة التحكم</span></a></li>
+            <li><a href="../procurement/procurement.html" class="sidebar-link"><span class="icon"><i class="bi bi-cart3" aria-hidden="true"></i></span><span class="label">اداره المشتريات</span></a></li>
+            <li><a href="../items/items.html" class="sidebar-link"><span class="icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></span><span class="label">اضافه الاصناف</span></a></li>
+            <li><a href="../inventory/inventory.html" class="sidebar-link"><span class="icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span><span class="label">المخزن</span></a></li>
+            <li><a href="sales.html" class="sidebar-link active"><span class="icon"><i class="bi bi-receipt" aria-hidden="true"></i></span><span class="label">المبيعات</span></a></li>
+            <li><a href="../orders/Orders.html" class="sidebar-link"><span class="icon"><i class="bi bi-card-checklist" aria-hidden="true"></i></span><span class="label">الطلبات</span></a></li>
+            <li><a href="../customers/customers.html" class="sidebar-link"><span class="icon"><i class="bi bi-people" aria-hidden="true"></i></span><span class="label">الزبائن</span></a></li>
+        </ul>
+    </div>
+
+    <main id="main-content" class="content">
+        <div class="vienna-page-head">
+            <div>
+                <h1 class="mb-1">المبيعات</h1>
+                <p class="mb-0 vienna-subtitle">إضافة الأصناف للسلة ثم تسجيل عملية بيع مباشرة (Supabase فقط).</p>
+            </div>
+            <div class="items-search" role="search">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input type="search" id="sales-search" class="form-control" placeholder="ابحث عن صنف..." />
+            </div>
+        </div>
+
+        <div class="sales-layout">
+            <section>
+                <div id="sales-products" class="sales-products" aria-live="polite"></div>
+            </section>
+
+            <aside class="vienna-card cart-card" aria-label="سلة البيع">
+                <div class="vienna-card-head">
+                    <div>
+                        <h2 class="m-0">السلة</h2>
+                        <div class="vienna-card-hint">العناصر: <b id="sales-cart-count">0</b></div>
+                    </div>
+                    <button type="button" id="sales-clear" class="btn btn-sm btn-outline-secondary">تفريغ</button>
+                </div>
+
+                <div id="sales-cart-items" class="cart-items"></div>
+
+                <hr class="divider" />
+                <div class="bill-summary">
+                    <div class="summary-row"><span>طريقة الدفع:</span>
+                        <select id="sales-payment-method" class="form-select form-select-sm">
+                            <option value="cash">نقدي</option>
+                            <option value="card">بطاقة</option>
+                            <option value="transfer">تحويل</option>
+                        </select>
+                    </div>
+                    <div class="summary-row"><span>المدفوع:</span><input id="sales-paid" type="number" class="form-control form-control-sm" min="0" step="0.01" value="0"></div>
+                    <div class="summary-row total"><span>الإجمالي:</span><span id="sales-cart-total">0.00</span></div>
+                </div>
+
+                                <div class="sales-order-box mt-2">
+                                    <div class="fw-bold mb-2">بيانات الزبون (لإنشاء طلب)</div>
+                                    <div class="row g-2">
+                                        <div class="col-12">
+                                            <input id="order-cust-name" class="form-control form-control-sm" placeholder="اسم الزبون" />
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <input id="order-cust-phone" class="form-control form-control-sm" placeholder="رقم الهاتف" dir="ltr" />
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <input id="order-cust-phone2" class="form-control form-control-sm" placeholder="رقم احتياطي" dir="ltr" />
+                                        </div>
+                                        <div class="col-12">
+                                            <input id="order-cust-address" class="form-control form-control-sm" placeholder="العنوان" />
+                                        </div>
+                                        <div class="col-12">
+                                            <textarea id="order-notes" class="form-control form-control-sm" rows="2" placeholder="ملاحظات إضافية"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 mt-2">
+                                    <button type="button" id="sales-confirm" class="btn btn-primary">تسجيل البيع</button>
+                                    <button type="button" id="sales-create-order" class="btn btn-outline-primary">إرسال كطلب</button>
+                                </div>
+            </aside>
+        </div>
+    </main>
+
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../script.js"></script>
+    <script src="../../assets/js/supabase-config.js"></script>
+    <script src="../../assets/js/supabase-client.js"></script>
+    <script src="../../assets/js/supabase-integration.js"></script>
+    <script src="sales.js"></script>
+</body>
+</html>

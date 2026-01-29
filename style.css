@@ -79,6 +79,20 @@ body {
     transition: margin-right 0.4s ease;
 }
 
+/* Make main content respond smoothly to sidebar changes */
+#main-content, .content {
+    transition: margin-right 280ms cubic-bezier(.2,.8,.2,1), padding 220ms ease;
+}
+
+/* Global Vienna card to give a professional, consistent look */
+.vienna-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
 /* Collapsed state */
 body.sidebar-collapsed .sidebar {
     width: var(--sidebar-collapsed-width);

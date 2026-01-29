@@ -1,1 +1,148 @@
-.procurement-layout{display:grid;grid-template-columns:2fr 1fr;gap:30px;align-items:start}.bill-form-container,.recent-bills-container,.bill-details-container{background:#fff;padding:30px;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,0.05)}.bill-details-container{grid-column:1/-1;margin-top:30px}.divider{margin:20px 0;border:0;border-top:1px solid #eee}#bill-items-container .bill-item-row{background:#f9f9f9;border-radius:6px;padding:15px;margin-bottom:15px;display:grid;grid-template-columns:3fr 1fr 1fr 1fr auto;gap:15px;align-items:center}.bill-item-row .form-group{margin:0}.bill-item-row .form-group .item-select-wrapper{display:grid;grid-template-columns:1fr auto;gap:5px}.add-item-btn{width:100%;padding:10px;border:2px dashed var(--light-blue);background:transparent;color:var(--light-blue);font-weight:bold;cursor:pointer;border-radius:6px;transition:all .3s}.add-item-btn:hover{background:var(--light-blue);color:#fff}.remove-item-row-btn{background:transparent;border:none;color:#e74c3c;font-size:20px;font-weight:bold;cursor:pointer;padding:5px}.bill-summary{padding:15px;background:#f9f9f9;border-radius:6px}.summary-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-size:16px}.summary-row:not(:last-child){border-bottom:1px solid #eee}.summary-row span:first-child,.summary-row input{font-weight:bold}.summary-row input{text-align:left;border:1px solid #ddd;background:#fff;max-width:120px}.summary-row.total span{font-size:20px;font-weight:bold;color:var(--dark-blue)}.summary-row.remaining span{color:#e74c3c;font-weight:bold}.search-container input{width:100%;padding:10px;border:1px solid #ccc;border-radius:4px;margin-bottom:20px}#recent-bills-list .recent-bill-card{background:#fff;padding:15px;border-radius:6px;margin-bottom:10px;border-right:4px solid var(--light-blue);cursor:pointer;transition:all .3s;border:1px solid #eee;display:flex;justify-content:space-between}#recent-bills-list .recent-bill-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.1);border-color:var(--light-blue)}#recent-bills-list .recent-bill-card.selected{border-color:var(--blue);border-right-width:5px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}#bill-details-container table{width:100%;border-collapse:collapse;margin-top:20px}#bill-details-container th,#bill-details-container td{padding:12px;text-align:right;border-bottom:1px solid #eee}#bill-details-container th{background-color:#f9f9f9}#bill-details-summary{margin-top:20px;padding-top:20px;border-top:2px solid #ddd;display:flex;justify-content:flex-end}#bill-details-summary>div{width:300px}@media (max-width: 992px){.procurement-layout{grid-template-columns:1fr}}@media (max-width: 768px){#bill-items-container .bill-item-row{grid-template-columns:1fr 1fr;grid-template-areas:"select remove" "qty buy" "sell sell"}.bill-item-row .form-group:nth-child(1){grid-area:select}.bill-item-row .form-group:nth-child(2){grid-area:qty}.bill-item-row .form-group:nth-child(3){grid-area:buy}.bill-item-row .form-group:nth-child(4){grid-area:sell}.bill-item-row .subtotal-group{grid-area:remove;justify-self:end}}
+/* VIENNA Procurement page (modern UI) */
+
+:root {
+	--vienna-muted: rgba(15, 40, 84, 0.62);
+}
+
+.vienna-page-head {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 14px;
+	flex-wrap: wrap;
+	margin-bottom: 14px;
+}
+
+.vienna-subtitle { color: var(--vienna-muted); }
+
+.procurement-layout {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	gap: 22px;
+	align-items: start;
+}
+
+@media (max-width: 992px) {
+	.procurement-layout { grid-template-columns: 1fr; }
+}
+
+/* Let shared.css provide the premium panel background; we only tune spacing */
+.bill-form-container,
+.recent-bills-container,
+.bill-details-container {
+	padding: 18px;
+}
+
+.divider { margin: 16px 0; border: 0; border-top: 1px solid rgba(15, 40, 84, 0.10); }
+
+#bill-items-container .bill-item-row {
+	background: rgba(255, 255, 255, 0.62);
+	border: 1px solid rgba(15, 40, 84, 0.10);
+	border-radius: 14px;
+	padding: 12px;
+	margin-bottom: 12px;
+	display: grid;
+	grid-template-columns: 3fr 1fr 1fr 1fr auto;
+	gap: 12px;
+	align-items: center;
+}
+
+.bill-item-row .form-group { margin: 0; }
+
+.bill-item-row .form-group .item-select-wrapper {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 10px;
+	align-items: center;
+}
+
+.add-item-btn {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1.5px dashed rgba(73, 136, 196, 0.55);
+	background: rgba(73, 136, 196, 0.08);
+	color: rgba(15, 40, 84, 0.92);
+	font-weight: 900;
+	cursor: pointer;
+	border-radius: 14px;
+	transition: background 160ms ease, transform 140ms ease;
+}
+
+.add-item-btn:hover { background: rgba(73, 136, 196, 0.14); }
+.add-item-btn:active { transform: translateY(1px); }
+
+.remove-item-row-btn {
+	background: transparent;
+	border: none;
+	color: rgba(231, 76, 60, 0.95);
+	font-size: 22px;
+	font-weight: 900;
+	cursor: pointer;
+	padding: 4px 6px;
+}
+
+.bill-summary {
+	padding: 12px;
+	border-radius: 14px;
+	border: 1px solid rgba(15, 40, 84, 0.10);
+	background: rgba(255, 255, 255, 0.62);
+}
+
+.summary-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 0;
+}
+
+.summary-row:not(:last-child) { border-bottom: 1px solid rgba(15, 40, 84, 0.08); }
+
+.summary-row.total span { font-size: 18px; font-weight: 900; color: var(--dark-blue); }
+.summary-row.remaining span { color: rgba(231, 76, 60, 0.95); font-weight: 900; }
+
+.search-container input { margin-bottom: 14px; }
+
+#recent-bills-list .recent-bill-card {
+	background: rgba(255, 255, 255, 0.70);
+	padding: 12px;
+	border-radius: 14px;
+	margin-bottom: 10px;
+	cursor: pointer;
+	border: 1px solid rgba(15, 40, 84, 0.08);
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+	border-right: 4px solid rgba(73, 136, 196, 0.55);
+}
+
+#recent-bills-list .recent-bill-card:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 16px 40px rgba(15, 40, 84, 0.10);
+	border-color: rgba(73, 136, 196, 0.25);
+}
+
+#recent-bills-list .recent-bill-card.selected {
+	border-right-color: rgba(73, 136, 196, 0.95);
+	border-right-width: 5px;
+}
+
+#bill-details-container table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+#bill-details-container th,
+#bill-details-container td { padding: 12px; text-align: right; border-bottom: 1px solid rgba(15, 40, 84, 0.08); }
+#bill-details-container th { background: rgba(255, 255, 255, 0.55); }
+
+@media (max-width: 768px) {
+	#bill-items-container .bill-item-row {
+		grid-template-columns: 1fr 1fr;
+		grid-template-areas:
+			"select remove"
+			"qty buy"
+			"sell sell";
+	}
+	.bill-item-row .form-group:nth-child(1) { grid-area: select; }
+	.bill-item-row .form-group:nth-child(2) { grid-area: qty; }
+	.bill-item-row .form-group:nth-child(3) { grid-area: buy; }
+	.bill-item-row .form-group:nth-child(4) { grid-area: sell; }
+	.bill-item-row .subtotal-group { grid-area: remove; justify-self: end; display: inline-flex; align-items: center; gap: 10px; }
+}

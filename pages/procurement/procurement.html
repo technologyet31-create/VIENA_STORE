@@ -26,13 +26,26 @@
       <li><a href="procurement.html" class="sidebar-link active"><span class="icon"><i class="bi bi-cart3" aria-hidden="true"></i></span><span class="label">اداره المشتريات</span></a></li>
       <li><a href="../items/items.html" class="sidebar-link"><span class="icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></span><span class="label">اضافه الاصناف</span></a></li>
       <li><a href="../inventory/inventory.html" class="sidebar-link"><span class="icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span><span class="label">المخزن</span></a></li>
+      <li><a href="../sales/sales.html" class="sidebar-link"><span class="icon"><i class="bi bi-receipt" aria-hidden="true"></i></span><span class="label">المبيعات</span></a></li>
+      <li><a href="../orders/Orders.html" class="sidebar-link"><span class="icon"><i class="bi bi-card-checklist" aria-hidden="true"></i></span><span class="label">الطلبات</span></a></li>
+      <li><a href="../customers/customers.html" class="sidebar-link"><span class="icon"><i class="bi bi-people" aria-hidden="true"></i></span><span class="label">الزبائن</span></a></li>
     </ul>
   </div>
   <main id="main-content" class="content">
-    <h1>اداره المشتريات</h1>
+    <div class="vienna-page-head">
+      <div>
+        <h1 class="mb-1">إدارة المشتريات</h1>
+        <p class="mb-0 vienna-subtitle">أنشئ فاتورة جديدة، واحفظها، وسيتم تحديث المخزن تلقائيًا.</p>
+      </div>
+    </div>
     <div class="procurement-layout">
       <div class="bill-form-container">
-        <h2>فاتورة جديدة</h2>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <h2 id="bill-form-title" style="margin:0">فاتورة جديدة</h2>
+            <div>
+              <button type="button" id="cancel-bill-edit-btn" class="btn btn-outline-secondary" style="display:none;">إلغاء التعديل</button>
+            </div>
+          </div>
         <form id="bill-form">
           <div id="bill-items-container"></div>
           <button type="button" id="add-bill-item-btn" class="add-item-btn">+ إضافة صنف</button>
@@ -69,6 +82,8 @@
   </main>
   <script src="../../assets/js/core.js"></script>
   <script src="../../script.js"></script>
+  <script src="../../assets/js/supabase-config.js"></script>
+  <script src="../../assets/js/supabase-client.js"></script>
   <script src="procurement.js"></script>
 </body>
 </html>
