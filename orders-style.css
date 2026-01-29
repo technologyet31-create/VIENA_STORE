@@ -1,0 +1,169 @@
+:root {
+    --dark-blue: #0f2854;
+    --blue: #1c4d8d;
+}
+
+body {
+    font-family: sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    direction: rtl;
+}
+
+.header {
+    background: var(--dark-blue);
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    border: 1px solid white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+}
+
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 10px;
+}
+
+.stat-box {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filters-container {
+    background: white;
+    padding: 15px;
+    margin: 0 10px 10px;
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.order-card {
+    background: white;
+    margin: 10px;
+    padding: 15px;
+    border-radius: 10px;
+    border-right: 6px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.order-card.جديد {
+    border-color: #f39c12;
+}
+
+.order-card.مع-المندوب {
+    border-color: #3498db;
+}
+
+.order-card.تمت-التوصيل {
+    border-color: #2ecc71;
+}
+
+.order-card.تمت-التسوية {
+    border-color: #9b59b6;
+}
+
+.order-card.ملغي {
+    border-color: #e74c3c;
+    opacity: 0.8;
+}
+
+.items-box {
+    background: #f9f9f9;
+    padding: 8px;
+    border-radius: 5px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+    border: 1px dashed #ddd;
+}
+
+.contact-row {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.btn-call {
+    flex: 1;
+    background: #2ecc71;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.btn-wa {
+    flex: 1;
+    background: #25D366;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.status-select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--blue);
+    background: #fff;
+    cursor: pointer;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+}
+
+.btn-confirm {
+    background: var(--dark-blue);
+    color: white;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.btn-cancel {
+    width: 100%;
+    background: #eee;
+    border: none;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 8px;
+    cursor: pointer;
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق المندوب</title>
+    <link rel="stylesheet" href="delivery-accounts.css">
+</head>
+<body>
+
+    <div class="container">
+        <header class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">الطلبات</span>
+                <span class="stat-value">12</span>
+            </div>
+            <div class="stat-card highlight">
+                <span class="stat-label">المبلغ المتبقي</span>
+                <span class="stat-value" id="pending-amount">450 $</span>
+            </div>
+        </header>
+
+        <main class="orders-section">
+            <h2>طلبات قيد التنفيذ</h2>
+            
+            <div class="order-list">
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-id">#1001</span>
+                        <a href="tel:0930799991" class="call-btn">📞 اتصل بالعميل</a>
+                    </div>
+                    
+                    <div class="customer-info">
+                        <p><strong>العميل:</strong> أحمد محمد</p>
+                        <p><strong>الهاتف:</strong> 0930799991</p>
+                        <p><strong>المنتجات:</strong> بيتزا عائلي، كوكاكولا 1L</p>
+                    </div>
+
+                    <div class="order-actions">
+                        <button class="btn btn-done" onclick="completeOrder(50)">تم التوصيل</button>
+                        <button class="btn btn-cancel" onclick="openCancelModal()">إلغاء</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <h3>سبب الإلغاء</h3>
+            <textarea id="cancelReason" placeholder="لماذا تم إلغاء الطلب؟"></textarea>
+            <div class="modal-buttons">
+                <button class="btn btn-done" onclick="confirmCancel()">تأكيد</button>
+                <button class="btn btn-cancel" onclick="closeCancelModal()">تراجع</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="delivery-accounts.js"></script>
+</body>
+</html>

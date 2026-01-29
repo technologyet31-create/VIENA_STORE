@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة إدارة الطلبات</title>
+    <link rel="stylesheet" href="orders-style.css">
+</head>
+
+<body>
+    <header class="header">
+        <h2>إدارة الطلبات 📋</h2>
+        <a href="sales.html" class="nav-link">➕ مبيعات جديدة</a>
+    </header>
+
+    <div class="stats-bar">
+        <div class="stat-box">
+            <h4>الجديد</h4>
+            <p id="stat-new">0</p>
+        </div>
+        <div class="stat-box">
+            <h4>عند المندوب</h4>
+            <p id="stat-driver">0</p>
+        </div>
+        <div class="stat-box">
+            <h4>إجمالي التسويات</h4>
+            <p id="stat-money">0 دينار</p>
+        </div>
+    </div>
+
+    <div class="filters-container">
+        <input type="text" id="f-name-phone" placeholder="بحث بالاسم أو الرقم..." oninput="filterOrders()">
+        <select id="f-driver" onchange="filterOrders()">
+            <option value="all">كل المندوبين</option>
+            <option value="أحمد">أحمد</option>
+            <option value="محمد">محمد</option>
+            <option value="سعد">سعد</option>
+        </select>
+        <select id="f-status" onchange="filterOrders()">
+            <option value="all">كل الحالات</option>
+            <option value="جديد">جديد</option>
+            <option value="مع المندوب">مع المندوب</option>
+            <option value="تمت التوصيل">تمت التوصيل</option>
+            <option value="في انتظار التسوية">في انتظار التسوية</option>
+            <option value="تمت التسوية">تمت التسوية</option>
+            <option value="ملغي">ملغي</option>
+        </select>
+        <input type="date" id="f-date" onchange="filterOrders()">
+    </div>
+
+    <div id="ordersList"></div>
+
+    <div id="cancelModal" class="modal">
+        <div class="modal-box">
+            <h4>سبب الإلغاء</h4>
+            <textarea id="cancelReason" rows="3" style="width:100%; border-radius:5px; padding:10px;"></textarea>
+            <button onclick="confirmCancel()" class="btn-confirm">تأكيد الإلغاء</button>
+            <button onclick="closeModal()" class="btn-cancel">تراجع</button>
+        </div>
+    </div>
+
+    <script src="orders-script.js"></script>
+</body>
+
+</html>

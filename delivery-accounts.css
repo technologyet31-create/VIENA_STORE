@@ -1,0 +1,124 @@
+:root {
+  --dark-blue: #0f2854;
+  --blue: #1c4d8d;
+  --light-blue: #4988c4;
+  --very-light-blue: #bde8f5;
+  --text-color: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f7f9;
+  margin: 0; padding: 15px;
+  direction: rtl;
+}
+
+.container { max-width: 600px; margin: auto; }
+
+/* الإحصائيات بشكل شبكي متجاوب */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background: var(--blue);
+  color: white;
+  padding: 15px;
+  border-radius: 15px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card.highlight { background: var(--dark-blue); }
+.stat-label { font-size: 0.9rem; opacity: 0.9; }
+.stat-value { font-size: 1.4rem; font-weight: bold; margin-top: 5px; }
+
+/* بطاقة الطلب */
+.order-card {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  border: 1px solid var(--very-light-blue);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.call-btn {
+  background: #2ecc71;
+  color: white;
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+.customer-info p { margin: 8px 0; color: #333; font-size: 0.95rem; }
+
+.order-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn {
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn-done { background: var(--blue); color: white; }
+.btn-cancel { background: #fee; color: #e74c3c; border: 1px solid #e74c3c; }
+
+/* المودال */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 40, 84, 0.8);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  width: 100%;
+  max-width: 400px;
+  padding: 25px;
+  border-radius: 20px;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  margin: 15px 0;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  resize: none;
+}
+
+/* تعديلات للشاشات الصغيرة جداً */
+@media (max-width: 400px) {
+  .order-actions { grid-template-columns: 1fr; }
+}
