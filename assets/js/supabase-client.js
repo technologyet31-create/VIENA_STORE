@@ -31,19 +31,49 @@
         sell_price: Number(it.sell_price ?? it.sellPrice ?? 0),
       }));
     },
-    async createProcurement(payment_method, paid, items){
+    async _rpcWithFallback(fnName, argVariants){
       await this.ensureReady();
+      let lastError = null;
+      for (const arg of (argVariants || [])) {
+        const { data, error } = await this._client.rpc(fnName, arg);
+        if (!error) return data;
+        lastError = error;
+
+        const msg = String(error?.message || '');
+        const code = String(error?.code || '');
+        const isBadRequest = code === '400' || msg.includes('Bad Request') || msg.includes('invalid input') || msg.includes('function') || msg.includes('does not exist');
+        if (!isBadRequest) throw error;
+      }
+      throw lastError || new Error(`RPC ${fnName} failed`);
+    },
+    async createProcurement(payment_method, paid, items){
       const payload = this._normalizeProcurementItems(items);
-      const arg = { payment_method, paid_arg: paid || 0, items_arg: JSON.stringify(payload) };
-      const { data, error } = await this._client.rpc('create_procurement', arg);
-      if (error) throw error; return data;
+      const pm = payment_method || null;
+      const paidNum = Number(paid) || 0;
+      return await this._rpcWithFallback('create_procurement', [
+        // Preferred: send JSON array (for json/jsonb params)
+        { payment_method: pm, paid_arg: paidNum, items_arg: payload },
+        { payment_method: pm, paid_arg: paidNum, items_arg: JSON.stringify(payload) },
+        // Common alternative param names
+        { payment_method: pm, paid: paidNum, items: payload },
+        { payment_method_arg: pm, paid_arg: paidNum, items_arg: payload },
+        { payment_method_arg: pm, paid: paidNum, items: payload },
+      ]);
     },
     async updateProcurement(bill_id, payment_method, paid, items){
-      await this.ensureReady();
       const payload = this._normalizeProcurementItems(items);
-      const arg = { bill_uuid: bill_id, new_payment_method: payment_method, new_paid: paid || 0, new_items: JSON.stringify(payload) };
-      const { data, error } = await this._client.rpc('update_procurement', arg);
-      if (error) throw error; return data;
+      const pm = payment_method || null;
+      const paidNum = Number(paid) || 0;
+      const bill = String(bill_id || '');
+      return await this._rpcWithFallback('update_procurement', [
+        // Preferred
+        { bill_uuid: bill, new_payment_method: pm, new_paid: paidNum, new_items: payload },
+        { bill_uuid: bill, new_payment_method: pm, new_paid: paidNum, new_items: JSON.stringify(payload) },
+        // Common alternative keys
+        { bill_id: bill, new_payment_method: pm, new_paid: paidNum, new_items: payload },
+        { bill_uuid: bill, payment_method: pm, paid_arg: paidNum, items_arg: payload },
+        { bill_uuid: bill, payment_method: pm, paid: paidNum, items: payload },
+      ]);
     },
     async deleteProcurement(bill_id){
       await this.ensureReady();

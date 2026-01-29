@@ -371,7 +371,10 @@
         billDetailsContainer.style.display = 'none';
       } catch (e2) {
         console.error(e2);
-        if (window.Vienna && Vienna.toast) Vienna.toast('تعذر حفظ الفاتورة. تحقق من الاتصال والصلاحيات.', 'error');
+        const msg = String(e2?.message || e2?.error_description || e2?.details || e2 || '').trim();
+        if (window.Vienna && Vienna.toast) {
+          Vienna.toast(msg ? `تعذر حفظ الفاتورة: ${msg}` : 'تعذر حفظ الفاتورة. تحقق من الاتصال والصلاحيات.', 'error');
+        }
       }
     });
 
